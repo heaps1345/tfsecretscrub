@@ -4,12 +4,12 @@ import re
 def scrub_sensitive_data(terraform_plan_file):
     # Define patterns for sensitive data and domains
     sensitive_patterns = {
-        "aws_access_key": re.compile(r'(?<=aws_access_key\s*=\s*")[^"]+'),
-        "aws_secret_key": re.compile(r'(?<=aws_secret_key\s*=\s*")[^"]+'),
-        "password": re.compile(r'(?<=password\s*=\s*")[^"]+'),
-        "private_key": re.compile(r'(?<=private_key\s*=\s*")[^"]+'),
-        "token": re.compile(r'(?<=token\s*=\s*")[^"]+'),
-        "domain": re.compile(r'([a-zA-Z0-9._-]+\.[a-zA-Z]{2,})')
+        "aws_access_key": re.compile(r'aws_access_key\s*=\s*".*?"'),
+        "aws_secret_key": re.compile(r'aws_secret_key\s*=\s*".*?"'),
+        "password": re.compile(r'password\s*=\s*".*?"'),
+        "private_key": re.compile(r'private_key\s*=\s*".*?"'),
+        "token": re.compile(r'token\s*=\s*".*?"'),
+        "domain": re.compile(r'\b(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,6}\b')
     }
 
     with open(terraform_plan_file, 'r') as file:
@@ -18,7 +18,7 @@ def scrub_sensitive_data(terraform_plan_file):
     def scrub(value):
         if isinstance(value, str):
             for key, pattern in sensitive_patterns.items():
-                value = pattern.sub('<REDACTED>', value)
+                value = pattern.sub(f'{key}="<REDACTED>"', value)
         return value
 
     def traverse_and_scrub(obj):
@@ -37,4 +37,4 @@ def scrub_sensitive_data(terraform_plan_file):
     print(f"Sensitive data and domain names in {terraform_plan_file} have been scrubbed.")
 
 # Example usage
-scrub_sensitive_data('your_terraform_plan.json')
+scrub_sensitive_data('tfplan.json')
