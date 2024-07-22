@@ -2,7 +2,7 @@ import json
 import re
 
 def scrub_sensitive_data(terraform_plan_file):
-    # Define patterns for sensitive data, domains, and IP addresses
+    # Define patterns for sensitive data, domains, IP addresses, AWS ARNs, and Akamai zone IDs
     sensitive_patterns = {
         "aws_access_key": re.compile(r'aws_access_key\s*=\s*".*?"'),
         "aws_secret_key": re.compile(r'aws_secret_key\s*=\s*".*?"'),
@@ -10,7 +10,9 @@ def scrub_sensitive_data(terraform_plan_file):
         "private_key": re.compile(r'private_key\s*=\s*".*?"'),
         "token": re.compile(r'token\s*=\s*".*?"'),
         "domain": re.compile(r'\b(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,6}\b'),
-        "ip_address": re.compile(r'\b\d{1,3}(\.\d{1,3}){3}\b')
+        "ip_address": re.compile(r'\b\d{1,3}(\.\d{1,3}){3}\b'),
+        "aws_arn": re.compile(r'arn:aws:iam::\d{12}:'),
+        "akamai_zone_id": re.compile(r'akamai_zone_id\s*=\s*".*?"')
     }
 
     with open(terraform_plan_file, 'r') as file:
@@ -35,7 +37,7 @@ def scrub_sensitive_data(terraform_plan_file):
     with open(terraform_plan_file, 'w') as file:
         json.dump(scrubbed_data, file, indent=2)
 
-    print(f"Sensitive data, domain names, and IP addresses in {terraform_plan_file} have been scrubbed.")
+    print(f"Sensitive data, domain names, IP addresses, AWS ARNs, and Akamai zone IDs in {terraform_plan_file} have been scrubbed.")
 
 # Example usage
 scrub_sensitive_data('tfplan.json')
